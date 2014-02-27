@@ -143,6 +143,7 @@ function exit_with_help
 	echo "	git deliver --init [PRESETS]"
 	echo "	git deliver --init-remote [--shared=...] <REMOTE_NAME> <REMOTE_URL>"
 	echo "	git deliver --list-presets"
+	echo "	git deliver --update-presets"
 	echo "	git deliver --status [REMOTE]"
 
 	if [[ -n ${code+defined} ]]; then
@@ -375,6 +376,7 @@ function init_preset
 function init
 	{
 	[[ $# -gt 0 ]] && local presets="$1"
+	[[ -d "$REPO_ROOT/.deliver/scripts" ]] && exit_with_error 22 "Already initialized"
 
 	if [[ -n ${presets+defined} ]]; then
 		IFS=',' read -ra presets <<< "$presets"
@@ -398,6 +400,15 @@ function init
 			init_preset $preset
 		done
 	fi
+	}
+
+
+function update_presets
+	{
+		[ -d "$REPO_ROOT/.deliver/scripts" ] || exit_with_error 22 "No preset found. You should run --init instead."
+		confirm_or_exit "This will overwrite all scripts. Do you wish to continue?"
+		rm -rf "$REPO_ROOT/.deliver/scripts"
+		init "$1"
 	}
 
 function run_stage_scripts
@@ -1165,6 +1176,10 @@ while getopts "$optspec" optchar; do
 				list-presets)
 					validate_command
 					FN="list_presets"
+					;;
+				update-presets)
+					validate_command
+					FN="update_presets"
 					;;
 				status)
 					validate_command
